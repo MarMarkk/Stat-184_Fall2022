@@ -1,0 +1,217 @@
+---
+title: "Stat 184 Activity 8"
+author: "Chuyan YUu"
+date: "2022-11-1"
+output:
+  pdf_document: default
+  html_notebook: default
+---
+```{r include=FALSE}
+knitr::opts_chunk$set(echo = FALSE) #package we use
+library(ggplot2)
+library(psych)
+library(dplyr)
+library(kableExtra)
+
+
+```
+
+## Collatz Conjecture
+
+
+The Collatz conjecture is one of the most famous unsolved problems in mathematics. The conjecture asks whether repeating two simple arithmetic operations will eventually transform every positive integer into 1. It concerns sequences of integers in which each term is obtained from the previous term as follows: if the previous term is even, the next term is one half of the previous term. If the previous term is odd, the next term is 3 times the previous term plus 1. The conjecture is that these sequences always reach 1, no matter which positive integer is chosen to start the sequence.
+
+
+```{r}
+CollatzC <- function(testNum,Times=0){ #basic Collatz Conjecture Function 
+  while(testNum>1){
+    Remain <- testNum%%2
+    if (Remain==0) {
+      testNum <- testNum/2
+      Times <- Times+1
+    } else {
+      testNum <- testNum*3+1
+      Times <- Times+1
+    }
+  }
+  return(Times)
+}
+
+```
+
+### Collatz Conjecture in 0 to 10000
+
+This draws our attention to whether there is a pattern to the recurrence of these numbers, whether the recurrence gets larger as the numbers get larger, or whether there are a few specific recursions that occur many times
+
+
+```{r, echo=FALSE,message=FALSE}
+CollatzCVec <- Vectorize(FUN = CollatzC) #Calculus Collatz Guess Recursion times from 1-10000
+outputs <- CollatzCVec(
+  testNum = c(1:10000)
+)
+source("https://raw.github.com/neilhatfield/STAT461/master/rScripts/shadowgram.R")  #use shadow graph function to generate graph
+shadowgram(
+  dataVec = outputs,
+  label = "Stopping Number 100000",
+  layers = 30,
+  aStep = 4,
+  color = "blue"
+)
+
+```
+
+Based on the image above, we can clearly see that this graph is a bimodal distribution. This means that from this graph we can understand that the recurrence of numbers in the interval 0 to 10000 is mostly concentrated in the interval 20-70 and 120-150.
+
+
+At the same time, when we look at the shaded graph, we can see the change of shading. We can also extend the conclusion to a certain range by the change of shading. And we can conclude that when the numbers are relatively small, their recurrence numbers are distributed around 20-70 and 120-150
+
+
+## Diamond 
+
+We all know that diamonds are very, very rare and precious diamonds. Every little flaw can lead to a significant loss in the price of a diamond, therefore, excluding congenital factors, artisans are very careful when polishing a diamond, they remove as many tables as possible to reflect the light and make the diamond look more sparkling, while polishing the diamond as little as possible to save money and increase the size of the diamond.
+
+Today we have collected data on a number of dimensions and will explore the impact of these dimensions on the diamond. For example, we have the clarity of the diamond, the color of the diamond, the size of the diamond and the cut of the diamond. A good diamond is perfect in every way. For example, its carat weight is high, its clarity is perfect, and its number of facets and cut is perfect.
+
+The most attractive element of these dimensions for me is the cut of the diamond, Because in my perception. A good cut means a good price. Because for a diamond, only a good cut can maximize the value of the diamond. Something may have a very large carat weight or a very high progress, but if an artisan does not cut it well to show its full beauty, its price will not be very high, rather a bad cut will compromise its price.So I drew a graph using the data collected.
+
+```{r, fig.width= 10}
+ggplot(diamonds) + #Price and cut relationship graph 
+  aes(x = price, y = cut) +
+  geom_boxplot(fill = "#EF562D") + #define color 
+  labs(
+    x = "Dimaonds Price",     #label name 
+    y = "Dimaonds Cut",
+    title = "The relaton between diamonds price and cut"
+  ) +
+  theme_bw() #graph style 
+
+```
+```{r}
+data= diamonds #price and cut table 
+dimensionStats <- describeBy(
+  x = diamonds$price, #data resource 
+  group = diamonds$cut,
+  data = diamonds,
+  mat = TRUE,
+  quant = c(0.25, 0.75)
+) %>%
+  mutate(
+    vars = case_when(
+      vars == 1 ~ "Price($)",
+    )
+  ) %>%
+  select(Cut = group1, Price = vars, Count = n,
+         Min=min, "First quartile"
+         = Q0.25 ,Meaidan=median,"Third quartile" = Q0.75, Mean=mean,"Stander Divination"=sd,Max=max) #name each column
+dimensionStats %>%
+  kable(
+    caption = "Cut and Price separate relation for diamonds " , #table name 
+    booktabs =TRUE,
+    align = c("l", rep("c",8))
+    
+  ) %>%
+  kableExtra::kable_styling( #graph style and position 
+    bootstrap_options = c("striped", "condensed"),
+    font_size = 16,
+    latex_options = c("scale_down","HOLD")
+    
+    
+  )
+```
+
+That's when the graph was drawn, and it completely refuted my point. We can see that for those diamonds that have a good cut, they don't go any higher. And as we can see from the table and the box plot, the price of the IDEAL cut level is the lowest, it is the only one that starts with  1000 in the median of all prices. And except for the premium cut diamonds, all the cut levels are less expensive than the lower cut level diamonds.
+
+So I redrew the same graph, and I added a new graph on the right. For this new graph, I changed the dimensions used in this graph, I didn't continue to use cut and price as the X-axis and Y-axis, I used carat and cut as the X-axis and Y-universe, I wanted to see if carat also affects the effect of cut.
+
+
+```{r, fig.show="hold", out.width="50%"}
+ggplot(diamonds) +
+  aes(x = price, y = cut) +
+  geom_boxplot(fill = "#EF562D") + # color of the bar 
+  labs(
+    x = "Dimaonds Price", #graph label 
+    y = "Dimaonds Cut",
+    title = "The relaton between diamonds price and cut"
+  ) +
+  theme_bw()#graph style 
+
+ggplot(diamonds) +
+  aes(x = carat, y = cut) +
+  geom_boxplot(fill = "#F4E04D") + #color of the bar 
+  labs(
+    x = "Dimaonds Carat",#graph label 
+    y = "Dimaonds Cut",
+    title = "The relaton between diamonds carat and cut"
+  ) +
+  theme_bw()#graph style
+
+```
+
+The results shown in this chart prove that my suspicions are correct, for those large carat diamonds, they may not have a very good cut, and most of the better cuts are in the smaller carat sizes.
+
+This leads to even a diamond with a very impressive cut. It can bring out the beauty of the diamond, but because of this inherent flaw in the carat weight of the diamond, the diamond will not fetch a high price.And when we look at these two pictures, the median trend of both pictures is similar, so we can use these two pictures to predict the impact of carat weight on diamond prices.
+
+
+
+
+## Reflections 
+
+### Planning Carefully
+
+At the very beginning of the course, we learned the most important point of the course, making a plan. In order to present a project in a good visual way, we must have a good plan, which ensures that we are efficient and the final result is complete and clear.
+
+It's like making a sandwich in class, we need to know the ingredients we need such as bread, peanut butter (package and data in Rstudio), and we need to know how we need to use the tools. For example, use the equations in the package to process the data. Only if we have a complete step-by-step plan can we complete the final "SANDWICH"
+
+### Functions in R
+
+Equations are also a very important point in this lesson, basically our code is supported by the return. Without it, it would be difficult to practice some of the goals.
+
+And equations are not just mathematical equations (x+y=0), they also imply different ways of handling data, such as filter and summarize, which are different equations.
+
+These equations greatly help us to simplify the data and improve its readability. For example, in class our teacher asked us to find the mean, median, maximum, minimum, etc. of a set of data. We used a lot of code to achieve this goal. But if we use functions, the process can be reduced to a single line of code.
+
+### Tidying Data
+
+Life is full of data, and we can easily collect it. But not all data is ideal, and much of it is cluttered or unnecessary.
+
+For example, when we organize the data of military marriages, we need to simplify the data. In the original table, the author used too many columns, but many of them were unnecessary, which would have created extra work for our statistics. But after we tidying the date, each row corresponds to a situation. This is where the computer and we can easily solve the problem of organizing the data, and using it.
+
+### Data Visualizaiton 
+
+#### Build Visualization 
+
+First we need to build a visualization if we want to achieve the desired visualization effect.In this unit we use a very powerful package called ggplot2, in this package we only need to assign the data and image type we need to the equation and the equation will automatically generate the image for us. If we simply generate the image, then this operation is simple, the more difficult part is to improve the image quality.
+en 
+
+#### Improve Visualization 
+
+
+If we want to have a highly readable graph, we can't just visualize the data, we also need to enhance the data. And enhancing data from multiple dimensions is not just a matter of changing a bright color. For example, we can add a general title, as well as a title for the xy axis. And we should clean up unnecessary elements such as too many colors. Or we can add annotations to the different colors to help the reader understand the whole image.
+
+
+### Data Wrangling 
+
+In this section our main task is to sort or count the data, in other words to organize the data using equations.
+
+In our database, we can see that a table can have many kinds of data. But if we want to use only one kind of data or visualize one kind of data, then we need data wrangling
+
+For example, when I need to draw a graph where the elements of the graph are the color of the diamond and the cut level of the diamond. This only requires the diamond cut level and the diamond color. We do not need other diamond elements such as carat weight or clarity of the diamond. This is where we extract the data we need and use the data we have extracted, while discarding the data we do not need.
+
+To summarize, in this unit we use functions to help us turn the existing data into the data we need.
+
+### Table
+
+In this section we will learn another way to represent data. Unlike data visualization, which uses graphs to represent data. In this unit, we use actual numbers to represent the data and they are not the original data that we are working with. We need to output these data statistically. For example, we need to calculate the median, the plural, or the largest and smallest number of these data. Or we can count the number of occurrences of a certain situation. Or we can count the number of occurrences of a particular situation.
+
+For example, in the 7th activity we created our own graph. In this chart, we looked at different diamond cut levels and diamond depth(z) distribution. In order to do this, we first needed to organize our data, and we needed to filter the data among all the data. This uses the knowledge of data wangling. In addition we need to make a table of these data. In this step we try to use the package "kableExtra". This package can help us to generate tables quickly, we just need to import the required attributes.
+
+
+### RMD File
+
+This unit is more like a summary unit, where we summarize what we have learned into a file or project.
+
+Also RMDfile is an interactive document. We combine graphs and explanations to produce future projects.
+
+
+
+
